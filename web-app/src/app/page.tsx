@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Database, Wallet, User, MessageSquare, Settings, BarChart3, Loader2 } from 'lucide-react';
 
 export default function Home() {
-	const { isConnected, address } = useAccount();
+	const { isConnected } = useAccount();
 	const { hasProfile } = useUserProfile();
 	const { isInitialized, isLoading: dbLoading, error: dbError } = useIndexedDB();
 
@@ -73,7 +73,7 @@ export default function Home() {
 						Web3 + IndexedDB Demo
 					</h1>
 					<p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-						This demo shows how to build efficient Web3 applications that don't constantly hit the blockchain.
+						This demo shows how to build efficient Web3 applications that don&apos;t constantly hit the blockchain.
 					</p>
 
 					<div className="flex items-center justify-center gap-2 mt-4">

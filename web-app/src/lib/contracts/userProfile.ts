@@ -108,7 +108,7 @@ export const USER_PROFILE_ABI = [
   }
 ] as const;
 
-export const USER_PROFILE_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3' as const;
+export const USER_PROFILE_ADDRESS = '0xfcd944ad43a75c622f2c344271f3cf7f20ca6314' as const;
 
 // Type definitions for contract data
 export interface ContractProfile {

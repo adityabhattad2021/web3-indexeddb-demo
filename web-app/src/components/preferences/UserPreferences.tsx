@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, Save, User } from 'lucide-react';
+import { Settings, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function UserPreferences() {
@@ -62,7 +62,7 @@ export function UserPreferences() {
           User Preferences
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          These settings are stored locally and don't require blockchain transactions
+          These settings are stored locally and don&apos;t require blockchain transactions
         </p>
       </CardHeader>
       

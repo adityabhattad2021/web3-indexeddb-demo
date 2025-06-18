@@ -4,12 +4,15 @@ BROADCAST := --broadcast
 LEGACY := --legacy
 
 FORGE_SCRIPT := forge script
+-include .env
 
 
 
 deploy-user-profile:
 	$(FORGE_SCRIPT) script/Deploy.s.sol:UserProfileScript --rpc-url $(RPC_URL) $(VERBOSITY) $(BROADCAST) $(LEGACY)
 
+deploy-user-profile-polygon-testnet:
+	$(FORGE_SCRIPT) script/Deploy.s.sol:UserProfileScript --rpc-url ${POLYGON_AMOY_RPC_URL} --private-key ${PRIVATE_KEY} ${BROADCAST} --verify --etherscan-api-key ${ETHERSCAN_API_KEY} $(LEGACY) -vvvv
 
 
 help:
