@@ -3,111 +3,74 @@ pragma solidity ^0.8.19;
 
 /**
  * @title UserProfile
- * @dev A simple smart contract for managing user profiles and preferences
+ * @notice This contract only handles essential user data and posts
  */
 contract UserProfile {
     struct Profile {
         string username;
         string bio;
-        string avatarUrl;
         uint256 createdAt;
-        uint256 updatedAt;
-        bool isActive;
+        bool exists;
     }
     
-    struct Preferences {
-        string theme; // "light", "dark", "auto"
-        string language; // "en", "es", "fr", etc.
-        bool notifications;
-        uint256 updatedAt;
+    struct Post {
+        uint256 id;
+        address author;
+        string title;
+        string content;
+        uint256 createdAt;
+        bool exists;
     }
     
     mapping(address => Profile) public profiles;
-    mapping(address => Preferences) public preferences;
-    mapping(address => bool) public hasProfile;
+    mapping(uint256 => Post) public posts;
+    mapping(address => uint256[]) public userPosts;
     
-    address[] public users;
+    uint256 public nextPostId = 1;
+    uint256[] public allPostIds;
     
     event ProfileCreated(address indexed user, string username);
-    event ProfileUpdated(address indexed user, string username);
-    event PreferencesUpdated(address indexed user, string theme);
-    
-    modifier onlyProfileOwner() {
-        require(hasProfile[msg.sender], "Profile does not exist");
-        _;
-    }
+    event PostCreated(uint256 indexed postId, address indexed author, string title);
     
     /**
-     * @dev Create a new user profile
-     * @param _username The username for the profile
-     * @param _bio A short biography
-     * @param _avatarUrl URL to the user's avatar image
+     * @dev Create a user profile
      */
-    function createProfile(
-        string memory _username,
-        string memory _bio,
-        string memory _avatarUrl
-    ) external {
-        require(!hasProfile[msg.sender], "Profile already exists");
-        require(bytes(_username).length > 0, "Username cannot be empty");
+    function createProfile(string memory _username, string memory _bio) external {
+        require(!profiles[msg.sender].exists, "Profile already exists");
+        require(bytes(_username).length > 0, "Username required");
         
         profiles[msg.sender] = Profile({
             username: _username,
             bio: _bio,
-            avatarUrl: _avatarUrl,
             createdAt: block.timestamp,
-            updatedAt: block.timestamp,
-            isActive: true
+            exists: true
         });
-        
-        // Set default preferences
-        preferences[msg.sender] = Preferences({
-            theme: "auto",
-            language: "en",
-            notifications: true,
-            updatedAt: block.timestamp
-        });
-        
-        hasProfile[msg.sender] = true;
-        users.push(msg.sender);
         
         emit ProfileCreated(msg.sender, _username);
     }
     
     /**
-     * @dev Update user profile information
+     * @dev Create a post (requires profile)
      */
-    function updateProfile(
-        string memory _username,
-        string memory _bio,
-        string memory _avatarUrl
-    ) external onlyProfileOwner {
-        require(bytes(_username).length > 0, "Username cannot be empty");
+    function createPost(string memory _title, string memory _content) external {
+        require(profiles[msg.sender].exists, "Profile required");
+        require(bytes(_title).length > 0, "Title required");
         
-        Profile storage profile = profiles[msg.sender];
-        profile.username = _username;
-        profile.bio = _bio;
-        profile.avatarUrl = _avatarUrl;
-        profile.updatedAt = block.timestamp;
+        uint256 postId = nextPostId++;
         
-        emit ProfileUpdated(msg.sender, _username);
-    }
-    
-    /**
-     * @dev Update user preferences
-     */
-    function updatePreferences(
-        string memory _theme,
-        string memory _language,
-        bool _notifications
-    ) external onlyProfileOwner {
-        Preferences storage prefs = preferences[msg.sender];
-        prefs.theme = _theme;
-        prefs.language = _language;
-        prefs.notifications = _notifications;
-        prefs.updatedAt = block.timestamp;
+        posts[postId] = Post({
+            id: postId,
+            author: msg.sender,
+            title: _title,
+            content: _content,
+            createdAt: block.timestamp,
+            exists: true
+        });
         
-        emit PreferencesUpdated(msg.sender, _theme);
+        userPosts[msg.sender].push(postId);
+        allPostIds.push(postId);
+        
+        emit PostCreated(postId, msg.sender, _title);
     }
     
     /**
@@ -116,61 +79,46 @@ contract UserProfile {
     function getProfile(address _user) external view returns (
         string memory username,
         string memory bio,
-        string memory avatarUrl,
         uint256 createdAt,
-        uint256 updatedAt,
-        bool isActive
+        bool exists
     ) {
-        require(hasProfile[_user], "Profile does not exist");
         Profile memory profile = profiles[_user];
-        return (
-            profile.username,
-            profile.bio,
-            profile.avatarUrl,
-            profile.createdAt,
-            profile.updatedAt,
-            profile.isActive
-        );
+        return (profile.username, profile.bio, profile.createdAt, profile.exists);
     }
     
     /**
-     * @dev Get user preferences
+     * @dev Get all post IDs (for client-side pagination)
      */
-    function getPreferences(address _user) external view returns (
-        string memory theme,
-        string memory language,
-        bool notifications,
-        uint256 updatedAt
+    function getAllPostIds() external view returns (uint256[] memory) {
+        return allPostIds;
+    }
+    
+    /**
+     * @dev Get post details
+     */
+    function getPost(uint256 _postId) external view returns (
+        uint256 id,
+        address author,
+        string memory title,
+        string memory content,
+        uint256 createdAt,
+        bool exists
     ) {
-        require(hasProfile[_user], "Profile does not exist");
-        Preferences memory prefs = preferences[_user];
-        return (
-            prefs.theme,
-            prefs.language,
-            prefs.notifications,
-            prefs.updatedAt
-        );
+        Post memory post = posts[_postId];
+        return (post.id, post.author, post.title, post.content, post.createdAt, post.exists);
     }
     
     /**
-     * @dev Get total number of users
+     * @dev Get user's post IDs
      */
-    function getUserCount() external view returns (uint256) {
-        return users.length;
+    function getUserPosts(address _user) external view returns (uint256[] memory) {
+        return userPosts[_user];
     }
     
     /**
-     * @dev Get user at specific index
+     * @dev Check if user has profile
      */
-    function getUserAtIndex(uint256 _index) external view returns (address) {
-        require(_index < users.length, "Index out of bounds");
-        return users[_index];
-    }
-    
-    /**
-     * @dev Check if user has a profile
-     */
-    function userHasProfile(address _user) external view returns (bool) {
-        return hasProfile[_user];
+    function hasProfile(address _user) external view returns (bool) {
+        return profiles[_user].exists;
     }
 }
